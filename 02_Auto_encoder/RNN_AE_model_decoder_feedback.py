@@ -3,31 +3,25 @@
 
 import tensorflow as tf
 import numpy as np
+import utils
+
 tf.set_random_seed(77)
 layers = tf.contrib.layers
+util = utils.Util()
 
 class LSTMAutoEnc(object):
     def __init__(self,
                  song_length,
-                 batch_size=2,
+                 batch_size=1,
                  mode='train'):
 
         # mode 'train' or 'test'
         self.mode = mode
 
-        # set index <-> data
-        # melody [0, 1 ~ 36, 50] -- size 38
-        # rhythm [0, 1, 2, 3, 4, 6, 8, 12, 16] -- size 9
-        self.melody_sample = list(range(1, 37))
-        self.melody_sample.append(50)  # rest
-        self.melody_sample.append(0)  # for test
-        self.idx2char = list(set(self.melody_sample))
-        self.char2idx = {c: i for i, c in enumerate(self.idx2char)}
-
         # set hyperparameter
-        self.input_size = len(self.char2idx)
+        self.input_size = len(util.pitch_sample)
         self.hidden_size = 128
-        self.output_size = len(self.char2idx)
+        self.output_size = len(util.pitch_sample)
         self.batch_size = batch_size
         self.sequence_length = song_length
         self.learning_rate = 0.01
@@ -39,26 +33,18 @@ class LSTMAutoEnc(object):
                                             state_is_tuple=False)
 
         # placeholder
-        self.Enc_input = tf.placeholder(tf.int32, [None, self.sequence_length], name='enc_input')
-        self.Dec_input = tf.placeholder(tf.int32, [None, self.sequence_length], name='dec_input')
-        self.Dec_state = tf.placeholder(tf.float32, [self.batch_size, self.enc_cell.state_size], name='dec_state')
+        self.Enc_input = tf.placeholder(tf.int32, [None, self.sequence_length])
+        self.Dec_input = tf.placeholder(tf.int32, [None, self.sequence_length])
+        self.Dec_state = tf.placeholder(tf.float32, [self.batch_size, self.enc_cell.state_size])
 
         init = self.enc_cell.zero_state(self.batch_size, dtype=tf.float32)
 
-    def data2idx(self, data):
-        x_data = []
-        for d in data:
-            train_data = [self.char2idx[i] for i in d]
-            x_data.append(train_data[:])
-        x_data = np.array(x_data)
-
-        return x_data
-
-    def encoder(self):
+    def encoder(self, scopename):
+        self.enc_scope = "enc_{}".format(scopename)
         # one_hot : [sequence_length, input_size]
         self.x_one_hot = tf.one_hot(self.Enc_input, self.input_size)
 
-        with tf.variable_scope("encoder"):
+        with tf.variable_scope(self.enc_scope):
 
             # defining initial state
             self.initial_state = self.enc_cell.zero_state(self.batch_size, dtype=tf.float32)
@@ -67,13 +53,14 @@ class LSTMAutoEnc(object):
                                                inputs=self.x_one_hot,
                                                initial_state=self.initial_state)
 
-        self.enc_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='encoder')
+        self.enc_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope=self.enc_scope)
 
         return enc_state
 
 
-    def decoder(self):
-        with tf.variable_scope("decoder"):
+    def decoder(self, scopename):
+        self.dec_scope = "dec_{}".format(scopename)
+        with tf.variable_scope(self.dec_scope):
             # ex. [1,2,3,4] -> [0,4,3,2] => decoder input
             dec_input = tf.slice(self.Dec_input, [0, 1], [self.batch_size, self.sequence_length - 1])
             dec_input = tf.concat([tf.zeros([self.batch_size, 1], tf.int32), tf.reverse(dec_input, [1])], 1)
@@ -137,14 +124,18 @@ class LSTMAutoEnc(object):
             self.prediction = tf.argmax(self.outputs, axis=2)
             '''
 
-        self.dec_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='decoder')
+        self.dec_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope=self.dec_scope)
 
-    def build(self):
+    def build(self, scopename):
+        print("Start model build...")
+        self.enc_scope = "enc_{}".format(scopename)
+        self.dec_scope = "dec_{}".format(scopename)
+        self.loss_scope = "loss_{}".format(scopename)
 
         # one_hot : [sequence_length, input_size]
         self.x_one_hot = tf.one_hot(self.Enc_input, self.input_size)
 
-        with tf.variable_scope("encoder") as scope:
+        with tf.variable_scope(self.enc_scope) as scope:
             #scope.reuse_variables()
             # defining initial state
             self.initial_state = self.enc_cell.zero_state(self.batch_size, dtype=tf.float32)
@@ -155,10 +146,9 @@ class LSTMAutoEnc(object):
             # output size : [batch_size, seqence_length, hidden_size]
 
 
-        with tf.variable_scope("decoder"):
+        with tf.variable_scope(self.dec_scope):
 
             self.dec_state = enc_state
-            print ("state_size : ", np.shape(self.dec_state) )
 
             # ex. [1,2,3,4] -> [0,4,3,2] => decoder input
             dec_input = tf.slice(self.Dec_input, [0,1], [self.batch_size, self.sequence_length-1])
@@ -211,24 +201,30 @@ class LSTMAutoEnc(object):
             #outputs = tf.reshape(outputs, [self.batch_size, self.sequence_length, self.output_size])
             # [batch_size, sequence_size, one-hot size]
             outputs = tf.transpose(dec_output, perm=[1,0,2])
-            print (np.shape(outputs))
             self.outputs = tf.reverse(outputs, [1])
             self.prediction = tf.argmax(self.outputs, axis=2)
 
 
 
-        self.enc_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='encoder')
-        self.dec_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='decoder')
+        self.enc_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope=self.enc_scope)
+        self.dec_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope=self.dec_scope)
 
 
-        with tf.variable_scope("loss"):
+        with tf.variable_scope(self.loss_scope):
             weights = tf.ones([self.batch_size, self.sequence_length])
             sequence_loss = tf.contrib.seq2seq.sequence_loss(logits=self.outputs,
                                                              targets=self.Enc_input,
                                                              weights=weights)
             self.loss = tf.reduce_mean(sequence_loss)
             self.train = tf.train.AdamOptimizer(learning_rate=self.learning_rate).minimize(self.loss, var_list=[self.enc_vars, self.dec_vars])
-            tf.summary.scalar("loss", self.loss)
 
+        # summary for tensorboard graph
+        self._create_summaries()
 
         print('complete model build.')
+
+    def _create_summaries(self):
+        with tf.variable_scope('summaries'):
+            summ_loss = tf.summary.scalar(self.loss_scope, self.loss)
+
+            self.summary_op = tf.summary.merge([summ_loss])

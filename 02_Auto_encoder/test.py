@@ -5,60 +5,38 @@ import tensorflow as tf
 import numpy as np
 
 import RNN_AE_model_decoder_feedback as rnn_AE
+import utils
 
-sv_datetime = "20180422-204658"
+sv_datetime = "20180515-213956"
 
-def main(_):
-    # roly poly : [50, 10, 17, 17, 17, 15, 13,  17, 17, 17, 17, 17, 15, 13,  17, 50, 17, 17, 15, 13,  17, 17, 17, 17, 15, 17, 15, 13,   10, 10, 17, 17, 17, 17, 15, 13,  17, 50, 17, 15, 17, 15, 13,  20, 50, 17, 17, 17, 15, 13,  17, 15, 15, 15, 15, 17, 15, 13,   10, 22, 22, 50, 10, 10, 13,  10, 22, 22, 50, 22, 22, 22,  20, 50, 20, 20, 20, 25, 24,  20, 50, 17, 15, 13,   10, 22, 22, 50, 10, 10, 13,  10, 22, 22, 50, 22, 22, 22,  20, 50, 20, 20, 20, 25, 24,  25, 24, 50, 17, 20,   22, 22, 17, 20, 17, 20,  22, 22, 20, 25, 25, 24, 25,  20, 50, 20, 25, 25, 24, 25,  29, 27, 25, 24, 20,   22, 22, 17, 20, 17, 20,  22, 22, 20, 25, 25, 24, 25,  20, 50, 20, 25, 25, 24, 25,  29, 27, 25, 24, 24]
-    #             [2, 2, 2, 2, 4, 2, 2,  4, 2, 2, 2, 2, 2, 2,  4, 2, 2, 4, 2, 2,  2, 2, 2, 2, 2, 2, 2, 2,   2, 2, 2, 2, 2, 2, 2, 2,  4, 2, 2, 2, 2, 2, 2, 4, 2, 2, 2, 2, 2, 2,  2, 2, 2, 2, 2, 2, 2, 2,   4, 3, 1, 2, 2, 2, 2,  4, 3, 1, 2, 2, 2, 2,  4, 2, 2, 2, 2, 2, 2,  8, 2, 2, 2, 2,   4, 3, 1, 2, 2, 2, 2,  4, 3, 1, 2, 2, 2, 2,  4, 2, 2, 2, 2, 2, 2,  2, 6, 4, 2, 2,  4, 4, 2, 2, 2, 2, 4, 2, 2, 2, 2, 2, 2,  4, 2, 2, 2, 2, 2, 2,  4, 4, 4, 2, 2,   4, 4, 2, 2, 2, 2, 4, 2, 2, 2, 2, 2, 2,  4, 2, 2, 2, 2, 2, 2,  4, 4, 4, 2, 2,]
-    # River flows in you : [22, 21, 22, 21, 22, 17, 22, 15, 15, 15, 10, 14, 22, 21, 22, 21, 22, 17, 22, 15, 15, 15, 10, 14, 22, 21, 22, 22, 10, 21, 22, 22, 10, 17, 22, 22, 10, 15, 10, 14, 15, 17, 14, 12, 10, 9, 10, 10, 5, 10, 12, 14, 14, 15, 17, 15, 14, 12, 22, 21, 22, 22, 10, 21, 22, 22, 10, 17, 22, 22, 10, 15, 10, 14, 15, 17, 26, 24, 17, 24, 22, 21, 22, 10, 12, 14, 5, 10, 14, 15, 17, 5, 14, 15, 13, 12, 22, 24, 22, 21, 22, 10, 17, 10, 22, 24, 22, 21, 22, 10, 17, 10, 22, 24, 22, 21, 22, 24, 26, 27, 29, 26, 24, 22, 21, 12, 22, 26, 22, 21, 22, 10, 17, 10, 22, 24, 22, 21, 22, 10, 17, 10, 22, 24, 22, 21, 22, 24, 26, 27, 29, 26, 24, 22, 21, 12, 22, 22, 21, 22]
+util = utils.Util()
 
-    # set sample song data
-    state_sample = [
-              [50, 10, 17, 17, 17, 15, 13,  17, 17, 17, 17, 17, 15, 13,  17, 50, 17, 17, 15, 13,  17, 17, 17, 17, 15, 17, 15, 13,   10, 10, 17, 17, 17, 17, 15, 13,  17, 50, 17, 15, 17, 15, 13,  20, 50, 17, 17, 17, 15, 13,  17, 15, 15, 15, 15, 17, 15, 13,   10, 22, 22, 50, 10, 10, 13,  10, 22, 22, 50, 22, 22, 22,  20, 50, 20, 20, 20, 25, 24,  20, 50, 17, 15, 13,   10, 22, 22, 50, 10, 10, 13,  10, 22, 22, 50, 22, 22, 22,  20, 50, 20, 20, 20, 25, 24,  25, 24, 50, 17, 20,   22, 22, 17, 20, 17, 20,  22, 22, 20, 25, 25, 24, 25,  20, 50, 20, 25, 25, 24, 25,  29, 27, 25, 24, 20,   22, 22, 17, 20, 17, 20,  22, 22, 20, 25, 25, 24, 25,  20, 50, 20, 25, 25, 24, 25,  29, 27, 25, 24, 24],\
-             [22, 21, 22, 21, 22, 17, 22, 15, 15, 15, 10, 14, 22, 21, 22, 21, 22, 17, 22, 15, 15, 15, 10, 14, 22, 21, 22, 22, 10, 21, 22, 22, 10, 17, 22, 22, 10, 15, 10, 14, 15, 17, 14, 12, 10, 9, 10, 10, 5, 10, 12, 14, 14, 15, 17, 15, 14, 12, 22, 21, 22, 22, 10, 21, 22, 22, 10, 17, 22, 22, 10, 15, 10, 14, 15, 17, 26, 24, 17, 24, 22, 21, 22, 10, 12, 14, 5, 10, 14, 15, 17, 5, 14, 15, 13, 12, 22, 24, 22, 21, 22, 10, 17, 10, 22, 24, 22, 21, 22, 10, 17, 10, 22, 24, 22, 21, 22, 24, 26, 27, 29, 26, 24, 22, 21, 12, 22, 26, 22, 21, 22, 10, 17, 10, 22, 24, 22, 21, 22, 10, 17, 10, 22, 24, 22, 21, 22, 24, 26, 27, 29, 26, 24, 22, 21, 12, 22, 22, 21, 22]
-                 ]
-
-    sample = [50, 10, 17, 17, 17, 15, 13,  17, 17, 17, 17, 17, 15, 13,  17, 50, 17, 17, 15, 13,  17, 17, 17, 17, 15, 17, 15, 13,   10, 10, 17, 17, 17, 17, 15, 13,  17, 50, 17, 15, 17, 15, 13,  20, 50, 17, 17, 17, 15, 13,  17, 15, 15, 15, 15, 17, 15, 13,   10, 22, 22, 50, 10, 10, 13,  10, 22, 22, 50, 22, 22, 22,  20, 50, 20, 20, 20, 25, 24,  20, 50, 17, 15, 13,   10, 22, 22, 50, 10, 10, 13,  10, 22, 22, 50, 22, 22, 22,  20, 50, 20, 20, 20, 25, 24,  25, 24, 50, 17, 20,   22, 22, 17, 20, 17, 20,  22, 22, 20, 25, 25, 24, 25,  20, 50, 20, 25, 25, 24, 25,  29, 27, 25, 24, 20,   22, 22, 17, 20, 17, 20,  22, 22, 20, 25, 25, 24, 25,  20, 50, 20, 25, 25, 24, 25,  29, 27, 25, 24, 24]
-    #sample = [22, 21, 22, 21, 22, 17, 22, 15, 15, 15, 10, 14, 22, 21, 22, 21, 22, 17, 22, 15, 15, 15, 10, 14, 22, 21, 22, 22, 10, 21, 22, 22, 10, 17, 22, 22, 10, 15, 10, 14, 15, 17, 14, 12, 10, 9, 10, 10, 5, 10, 12, 14, 14, 15, 17, 15, 14, 12, 22, 21, 22, 22, 10, 21, 22, 22, 10, 17, 22, 22, 10, 15, 10, 14, 15, 17, 26, 24, 17, 24, 22, 21, 22, 10, 12, 14, 5, 10, 14, 15, 17, 5, 14, 15, 13, 12, 22, 24, 22, 21, 22, 10, 17, 10, 22, 24, 22, 21, 22, 10, 17, 10, 22, 24, 22, 21, 22, 24, 26, 27, 29, 26, 24, 22, 21, 12, 22, 26, 22, 21, 22, 10, 17, 10, 22, 24, 22, 21, 22, 10, 17, 10, 22, 24, 22, 21, 22, 24, 26, 27, 29, 26, 24, 22, 21, 12, 22, 22, 21, 22]
-
-    song_length = len(sample)
-    #test_sample = np.zeros(song_length)
-    #test_sample[0] = 4
-    one = np.ones(song_length)
-    test_sample = np.clip(sample,0,50)
-
-    test_melody = []
-    test_melody.append(test_sample)
-    song_length = np.shape(test_melody)[1]
-
-    print(test_melody)
-
+def test(trained_data, len_data, mode):
     # Test the RNN model
-    enc_model = rnn_AE.LSTMAutoEnc(song_length=song_length,
-                               batch_size=len(state_sample),
+    char2idx = util.getchar2idx(mode=mode)
+
+    enc_model = rnn_AE.LSTMAutoEnc(song_length=len_data,
+                               batch_size=1,
                                mode='test')
-    dec_model = rnn_AE.LSTMAutoEnc(song_length=song_length,
+    dec_model = rnn_AE.LSTMAutoEnc(song_length=len_data,
                                batch_size=1,
                                mode='test')
 
-    enc_out_state = enc_model.encoder()
-    dec_model.decoder()
+    enc_out_state = enc_model.encoder(scopename=mode)
+    dec_model.decoder(scopename=mode)
     #dec_model.build()
 
     # decoder input
-    test_data = dec_model.data2idx(test_melody)
-    test_data = np.array(test_data)
+    test_data = util.data2idx(trained_data, char2idx)
 
     # encoder input
-    state_sample_data = enc_model.data2idx(state_sample)
-    state_sample_data = np.array(state_sample_data)
+    state_sample_data = util.data2idx(trained_data, char2idx)
 
     enc_saver = tf.train.Saver(var_list=enc_model.enc_vars)
     dec_saver = tf.train.Saver(var_list=dec_model.dec_vars)
     with tf.Session() as sess:
-        enc_saver.restore(sess, "./save/" + sv_datetime + "/enc_model.ckpt")
-        dec_saver.restore(sess, "./save/" + sv_datetime + "/dec_model.ckpt")
+        enc_saver.restore(sess, "./save/" + sv_datetime + "/enc_{}_model.ckpt".format(mode))
+        dec_saver.restore(sess, "./save/" + sv_datetime + "/dec_{}_model.ckpt".format(mode))
         '''
         for i in model.enc_vars:
             print (i)
@@ -66,28 +44,56 @@ def main(_):
             print (i)
         '''
 
-        print("input: ", test_sample)
-        print("sample: ", sample)
-
         enc_out_state = sess.run(enc_out_state, feed_dict={enc_model.Enc_input: state_sample_data})
 
         # avarage encoder state output
         dec_in_state = np.mean(enc_out_state, 0).reshape([dec_model.batch_size, dec_model.enc_cell.state_size])
         #dec_in_state = np.zeros([dec_model.batch_size, dec_model.enc_cell.state_size])
 
-        result = sess.run(dec_model.prediction, feed_dict={dec_model.Dec_input: test_data,
+        prediction = sess.run(dec_model.prediction, feed_dict={dec_model.Dec_input: test_data,
                                                            dec_model.Dec_state: dec_in_state})
 
-        result_str = []
-        for r in result:
-            r_str = [dec_model.idx2char[c] for c in np.squeeze(r)]
-            result_str.append(r_str)
+        result = util.idx2char(prediction, mode)
+        print("result : ", result)
+        # print : result - trained_data
+        print_error(result, trained_data, mode)
 
-        print("result : ", result_str)
-        error = np.array(result_str) - np.array(sample)
+        return result
 
+def print_error(result, trained_data, mode):
+    # print : result - trained_data
+    trained_data = trained_data[0]
+    print("trained_data : ", trained_data)
+    if mode == 'pitch':
+        result = np.array(result)
+        result[result == 'Rest'] = 0
+        result = list(result)
+        trained_data = np.array(trained_data)
+        trained_data[trained_data == 'Rest'] = 0
+        trained_data = list(trained_data)
+        error = [int(x) - int(y) for x, y in zip(result, trained_data)]
+        print("error : ", error)
+    else:
+        error = [x - y for x, y in zip(result, trained_data)]
         print("error : ", error)
 
+def main(_):
+    # load all midi file
+    all_song = util.all_song
+
+    # load one midi file
+    filename = 'test.mid'
+    trained_song = util.get_one_song(filename)
+    print("One song load : {}".format(filename))
+    print("name : ", trained_song['name'])
+    print("length : ", trained_song['length'])
+    print("pitches : ", trained_song['pitches'])
+    print("durations : ", trained_song['durations'])
+
+    pitches = test([trained_song['pitches']], trained_song['length'], mode='pitch')
+    durations = test([trained_song['durations']], trained_song['length'], mode='duration')
+    # make midi file
+    util.song2midi(pitches, durations)
 
 if __name__ == '__main__':
     tf.app.run()
