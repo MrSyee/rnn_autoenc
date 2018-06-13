@@ -22,13 +22,13 @@ I use data which is music melody data from **midi file**.
 -	The final state of the encoder serves as the compressed space of general auto encoder.  
 -	Input of decoder is learning data sequence when learning, but output returns to input when it is used for output.
 
-##### code
+	##### code
 
--	Model (*Still editing now*\)
-	-	RNN_AE_model_decoder_dynamic : model using dynamic rnn in tensorflow
-	-	RNN_AE_model_decoder_feedback : model using cell with *for* loop
-	-	train : train model
-	-	test : generate new sequence using trained model
-	-	util : utility code
+	-	Model (*Still editing now*\)
+		-	RNN_AE_model_decoder_dynamic : model using dynamic rnn in tensorflow
+		-	RNN_AE_model_decoder_feedback : model using cell with `for` loop
+		-	train : train model
+		-	test : generate new sequence using trained model
+		-	util : utility code
 
 ![RNN Auto-Encoder](./img/rnn-autoencoder.png)
