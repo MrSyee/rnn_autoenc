@@ -51,24 +51,21 @@ def midi2melody(filename, mapping=False):
             pitch.append(mapping_pitch(p[1]))
     else:
         for p in melody:
+            pitch.append(p[1])
+
             if p[0] in DURATION_LIST:
                 duration.append(p[0])
-            else: # deviding tied note
+            else:  # deviding tied note
                 if p[0] > 4.0:
                     duration.append(4.0)
                 elif p[0] > 2 and p[0] < 3:
                     duration.append(2.0)
-                '''
-                for i in range(2):
-                    d = music21.duration.quarterConversion(p[0]).components[i].quarterLength
-                    duration.append(d)
-                    pitch.append(p[1])
-                '''
-            pitch.append(p[1])
+                else:  # 1/3, ...
+                    duration.append(0.5)
 
-    n_melody = len(pitch)
-    #print (pitch)
-    #print (duration)
+    n_melody = len(duration)
+    #print (len(pitch))
+    #print (len(duration))
     #print (max([p for p in pitch if isinstance(p,int)]))
     return songname, n_melody, pitch, duration
 
@@ -188,7 +185,7 @@ def graph_durations(file_path, file_list):
     plt.grid(linestyle='-', linewidth=0.2)
     plt.show()
 
-def melody2midi(pitches, durations):
+def melody2midi(pitches, durations, filename):
     '''
     make midi file
     :param
@@ -213,7 +210,7 @@ def melody2midi(pitches, durations):
     mf = midi.translate.streamToMidiFile(st)
     if not os.path.isdir(FILE_PATH+'/generate'):
         os.mkdir(FILE_PATH+'/generate')
-    path = FILE_PATH + '/generate/make_test_{}.mid'.format(NOWTIME)
+    path = FILE_PATH + '/generate/make_test_{}.mid'.format(filename)
     mf.open(path, 'wb')
     mf.write()
     mf.close()
@@ -224,11 +221,13 @@ def main():
 if __name__=='__main__':
     file_path = './songs/'
     file_list = load_filename(file_path)
-    song_file = 'test2.mid'
+    song_file = 'ALittleontheLonelySide.mid'
     song_path = file_path + song_file
     n, l, p, d = midi2melody(song_path, False)
+    '''
     all_song = load_all_midi(file_list, file_path)
     all_length = [s.get('length') for s in all_song]
     print (all_length)
     #graph_pitches(file_path, file_list)
     #graph_durations(file_path, file_list)
+    '''

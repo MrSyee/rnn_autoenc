@@ -20,6 +20,7 @@ class Util:
         self.pitch_sample.append('Rest')
 
         self.duration_sample = [4.0, 3.5, 3.0, 2.0, 1.75, 1.5, 1.0, 0.75, 0.5, 0.25]
+        self.duration_sample.append(0)  # start
 
     def get_one_song(self, filename):
         return midiutils.load_one_midi(filename, self.MIDI_PATH)
@@ -41,8 +42,7 @@ class Util:
             return {c: i for i, c in enumerate(self.pitch_sample)}
         elif mode=="duration":
             return {c: i for i, c in enumerate(self.duration_sample)}
-        elif mode=="melody":
-            pass
+
 
     def data2idx(self, data, char2idx):
         x_data = []
@@ -53,8 +53,8 @@ class Util:
 
         return x_data
 
-    def song2midi(self, pitches, durations):
-        midiutils.melody2midi(pitches, durations)
+    def song2midi(self, pitches, durations, filename):
+        midiutils.melody2midi(pitches, durations, filename)
 
 if __name__=="__main__":
     util = Util()
