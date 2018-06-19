@@ -185,7 +185,7 @@ def graph_durations(file_path, file_list):
     plt.grid(linestyle='-', linewidth=0.2)
     plt.show()
 
-def melody2midi(pitches, durations, filename):
+def melody2midi(pitches, durations, save_path, filename):
     '''
     make midi file
     :param
@@ -208,12 +208,23 @@ def melody2midi(pitches, durations, filename):
 
     #st.show('text')
     mf = midi.translate.streamToMidiFile(st)
-    if not os.path.isdir(FILE_PATH+'/generate'):
-        os.mkdir(FILE_PATH+'/generate')
-    path = FILE_PATH + '/generate/make_test_{}.mid'.format(filename)
+    if not os.path.isdir(FILE_PATH + save_path):
+        os.mkdir(FILE_PATH + save_path)
+    path = FILE_PATH + save_path + '/make_test_{}.mid'.format(filename)
     mf.open(path, 'wb')
     mf.write()
     mf.close()
+
+def export_melody():
+    '''
+    Extracts the melody from the MIDI file of every song in the path and makes it a MIDI file.
+    '''
+    file_path = './songs/'
+    file_list = load_filename(file_path)
+
+    all_songs = load_all_midi(file_list, file_path)
+    for song in all_songs:
+        melody2midi(song['pitches'], song['durations'], '/export_melody', song['name'])
 
 def main():
     pass
@@ -221,13 +232,41 @@ def main():
 if __name__=='__main__':
     file_path = './songs/'
     file_list = load_filename(file_path)
-    song_file = 'ALittleontheLonelySide.mid'
+
+    song_file = 'A_thousand_miles2C.mid'
     song_path = file_path + song_file
     n, l, p, d = midi2melody(song_path, False)
-    '''
-    all_song = load_all_midi(file_list, file_path)
-    all_length = [s.get('length') for s in all_song]
-    print (all_length)
-    #graph_pitches(file_path, file_list)
-    #graph_durations(file_path, file_list)
-    '''
+
+    songname = song_path.split('/')[-1].split('.')[0]
+    song = converter.parse(song_path)
+    part = song.parts[0]
+    part_tuples = []
+    try:
+        track_name = part[0].bestName()
+    except AttributeError:
+        track_name = 'None'
+    part_tuples.append(track_name)
+    melody = []
+    for event in part:
+        for y in event.contextSites():
+            if y[0] is part:
+                offset = y[1]
+        if getattr(event, 'isNote', None) and event.isNote:
+            melody.append([event.quarterLength, event.pitch.midi, offset])
+            #print([event.quarterLength, event.pitch.midi, offset])
+        if getattr(event, 'isRest', None) and event.isRest:
+            melody.append([event.quarterLength, 'Rest', offset])
+            #print([event.quarterLength, 'Rest', offset])
+    pitch = []
+    duration = []
+    for m in melody:
+        duration.append(m[0])
+        pitch.append(m[1])
+    print("before..")
+    print(pitch)
+    print(duration)
+
+    print('after..')
+    print(p)
+    print(d)
+

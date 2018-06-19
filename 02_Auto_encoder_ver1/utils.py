@@ -51,8 +51,8 @@ class Util:
 
         return np.array(x_data)
 
-    def song2midi(self, pitches, durations, filename):
-        midiutils.melody2midi(pitches, durations, filename)
+    def song2midi(self, pitches, durations, save_path, filename):
+        midiutils.melody2midi(pitches, durations, save_path, filename)
 
 if __name__=="__main__":
     util = Util()

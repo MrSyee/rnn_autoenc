@@ -185,7 +185,7 @@ def graph_durations(file_path, file_list):
     plt.grid(linestyle='-', linewidth=0.2)
     plt.show()
 
-def melody2midi(pitches, durations, filename):
+def melody2midi(pitches, durations, save_path, filename):
     '''
     make midi file
     :param
@@ -208,9 +208,9 @@ def melody2midi(pitches, durations, filename):
 
     #st.show('text')
     mf = midi.translate.streamToMidiFile(st)
-    if not os.path.isdir(FILE_PATH+'/generate'):
-        os.mkdir(FILE_PATH+'/generate')
-    path = FILE_PATH + '/generate/make_test_{}.mid'.format(filename)
+    if not os.path.isdir(FILE_PATH + save_path):
+        os.mkdir(FILE_PATH + save_path)
+    path = FILE_PATH + save_path + '/make_test_{}.mid'.format(filename)
     mf.open(path, 'wb')
     mf.write()
     mf.close()
@@ -219,15 +219,16 @@ def main():
     pass
 
 if __name__=='__main__':
+
     file_path = './songs/'
     file_list = load_filename(file_path)
+    '''
     song_file = 'ALittleontheLonelySide.mid'
     song_path = file_path + song_file
     n, l, p, d = midi2melody(song_path, False)
     '''
-    all_song = load_all_midi(file_list, file_path)
-    all_length = [s.get('length') for s in all_song]
-    print (all_length)
-    #graph_pitches(file_path, file_list)
-    #graph_durations(file_path, file_list)
-    '''
+    all_songs = load_all_midi(file_list, file_path)
+    for song in all_songs:
+        melody2midi(song['pitches'], song['durations'], '/export_melody', song['name'])
+
+

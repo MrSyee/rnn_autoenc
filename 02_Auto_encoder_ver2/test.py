@@ -108,7 +108,7 @@ def main(_):
 
     pitches, durations = test(trained_song, trained_song['length'])
     # make midi file
-    util.song2midi(pitches, durations, sv_datetime)
+    util.song2midi(pitches, durations, '/generate', sv_datetime)
 
 if __name__ == '__main__':
     tf.app.run()
