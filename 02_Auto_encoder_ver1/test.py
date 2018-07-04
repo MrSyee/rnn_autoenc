@@ -7,18 +7,20 @@ import numpy as np
 import RNN_AE_model_decoder_feedback as rnn_AE
 import utils
 
-sv_datetime = "20180606-221614_6songs"
+sv_datetime = "20180702-035219"
 
 util = utils.Util()
+
+MIN_SONG_LENGTH = 95
 
 def test(trained_data, len_data, mode):
     # Test the RNN model
     char2idx = util.getchar2idx(mode=mode)
 
-    enc_model = rnn_AE.LSTMAutoEnc(song_length=len_data,
+    enc_model = rnn_AE.LSTMAutoEnc(sequence_length=len_data,
                                    batch_size=len(trained_data),
                                    mode='test')
-    dec_model = rnn_AE.LSTMAutoEnc(song_length=len_data,
+    dec_model = rnn_AE.LSTMAutoEnc(sequence_length=160,
                                    batch_size=1,
                                    mode='test')
 
@@ -74,22 +76,24 @@ def print_error(result, trained_data, mode):
         print("error : ", error)
         print("total error : ", sum(error))
 
-def main(_):
-    '''
-    # load one midi file
-    filename = 'test.mid'
-    trained_song = util.get_one_song(filename)
-    print("One song load : {}".format(filename))
-    print("name : ", trained_song['name'])
-    print("length : ", trained_song['length'])
-    print("pitches : ", trained_song['pitches'])
-    print("durations : ", trained_song['durations'])
-    '''
-    # load all midi file
-    all_songs = util.all_song
+def songs_load():
+    filenames = ['988-v04.mid', '988-v02.mid']
+    trained_songs = []
+    for f in filenames:
+        trained_songs.append(util.get_one_song(f))
 
-    songs = all_songs
+    return trained_songs
+
+def main(_):
+    flag = 1
+
+    if flag == 0:
+        songs = util.get_all_song()
+    elif flag == 1:
+        songs = songs_load()
+
     print("Load {} Songs...".format(len(songs)))
+    songs_name = ""
     songs_len = []
     songs_pitches = []
     songs_durations = []
@@ -100,22 +104,28 @@ def main(_):
         print("durations : ", song['durations'])
         print("")
 
+        songs_name += "_" + song['name']
         songs_len.append(song['length'])
         songs_pitches.append(song['pitches'])
         songs_durations.append(song['durations'])
 
     # 여러 곡의 길이를 제일 짧은 곡에 맞춘다.
     for i in range(len(songs_pitches)):
-        if len(songs_pitches[i]) > min(songs_len):
-            songs_pitches[i] = songs_pitches[i][:min(songs_len)]
-            songs_durations[i] = songs_durations[i][:min(songs_len)]
+        if len(songs_pitches[i]) > MIN_SONG_LENGTH: # min(songs_len)
+            songs_pitches[i] = songs_pitches[i][:MIN_SONG_LENGTH]
+            songs_durations[i] = songs_durations[i][:MIN_SONG_LENGTH]
 
     # output song
-    pitches = test(songs_pitches, min(songs_len), mode='pitch')
-    durations = test(songs_durations, min(songs_len), mode='duration')
+    pitches = test(songs_pitches, MIN_SONG_LENGTH, mode='pitch')
+    durations = test(songs_durations, MIN_SONG_LENGTH, mode='duration')
 
     # make midi file
-    util.song2midi(pitches, durations, '/generate', sv_datetime)
+    filename = sv_datetime
+    if flag == 1:
+        filename = sv_datetime + songs_name
+
+    util.song2midi(pitches, durations, '/generate', filename)
+
 
 if __name__ == '__main__':
     tf.app.run()

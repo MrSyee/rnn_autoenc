@@ -43,6 +43,7 @@ def midi2melody(filename, mapping=False):
             melody.append([event.quarterLength, 'Rest', offset])
             #print([event.quarterLength, 'Rest', offset])
     part_tuples.append(melody)
+
     pitch = []
     duration = []
     if (mapping == True):
@@ -139,8 +140,10 @@ def load_all_midi(file_list, midi_path):
     for f in file_list:
         songpath = midi_path + f
         n, l, p, d = midi2melody(songpath, mapping=False)
-        song_dict = {'name': n, 'length': l, 'pitches': p, 'durations': d}
-        all_song.append(song_dict)
+        if not 'empty' in n:
+            song_dict = {'name': n, 'length': l, 'pitches': p, 'durations': d}
+            all_song.append(song_dict)
+
     return all_song
 
 def load_one_midi(filename, midi_path):
@@ -215,16 +218,22 @@ def melody2midi(pitches, durations, save_path, filename):
     mf.write()
     mf.close()
 
-def export_melody():
+def export_melody(is_import=True):
     '''
     Extracts the melody from the MIDI file of every song in the path and makes it a MIDI file.
     '''
-    file_path = './songs/'
+    file_path = 'songs/'
+    if is_import:
+        pwd = os.getcwd()
+        file_path = '{}/midi/songs/'.format(pwd)
+
     file_list = load_filename(file_path)
 
     all_songs = load_all_midi(file_list, file_path)
     for song in all_songs:
         melody2midi(song['pitches'], song['durations'], '/export_melody', song['name'])
+
+    print("Complete to export melody !")
 
 def main():
     pass
@@ -233,40 +242,8 @@ if __name__=='__main__':
     file_path = './songs/'
     file_list = load_filename(file_path)
 
-    song_file = 'A_thousand_miles2C.mid'
+    song_file = 'bach_850.mid'
     song_path = file_path + song_file
-    n, l, p, d = midi2melody(song_path, False)
 
-    songname = song_path.split('/')[-1].split('.')[0]
-    song = converter.parse(song_path)
-    part = song.parts[0]
-    part_tuples = []
-    try:
-        track_name = part[0].bestName()
-    except AttributeError:
-        track_name = 'None'
-    part_tuples.append(track_name)
-    melody = []
-    for event in part:
-        for y in event.contextSites():
-            if y[0] is part:
-                offset = y[1]
-        if getattr(event, 'isNote', None) and event.isNote:
-            melody.append([event.quarterLength, event.pitch.midi, offset])
-            #print([event.quarterLength, event.pitch.midi, offset])
-        if getattr(event, 'isRest', None) and event.isRest:
-            melody.append([event.quarterLength, 'Rest', offset])
-            #print([event.quarterLength, 'Rest', offset])
-    pitch = []
-    duration = []
-    for m in melody:
-        duration.append(m[0])
-        pitch.append(m[1])
-    print("before..")
-    print(pitch)
-    print(duration)
-
-    print('after..')
-    print(p)
-    print(d)
+    export_melody()
 

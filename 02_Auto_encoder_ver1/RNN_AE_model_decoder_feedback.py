@@ -11,7 +11,7 @@ util = utils.Util()
 
 class LSTMAutoEnc(object):
     def __init__(self,
-                 song_length,
+                 sequence_length,
                  batch_size=1,
                  mode='train'):
 
@@ -23,7 +23,7 @@ class LSTMAutoEnc(object):
         self.hidden_size = 128
         self.output_size = len(util.pitch_sample)
         self.batch_size = batch_size
-        self.sequence_length = song_length
+        self.sequence_length = sequence_length
         self.learning_rate = 0.01
 
         # cell

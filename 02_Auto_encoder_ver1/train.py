@@ -1,14 +1,15 @@
 
 # basic RNN using one-hot encdoing time series song data
 
+import random
 import tensorflow as tf
 import numpy as np
 from datetime import datetime
 
 import RNN_AE_model_decoder_feedback as rnn_AE
-import utils
+from utils import Util
 
-util = utils.Util()
+util = Util()
 now = datetime.now()
 
 NOWTIME = now.strftime("%Y%m%d-%H%M%S")
@@ -40,7 +41,8 @@ def train(trained_data, model, mode):
         sess.run(tf.global_variables_initializer())
 
         for i in range(step):
-            x_data = util.data2idx(trained_data, char2idx)
+            trian_samples = [trained_data[i] for i in sorted(random.sample(range(len(trained_data)), model.batch_size))]
+            x_data = util.data2idx(trian_samples, char2idx)
             x_data = np.reshape(x_data, [model.batch_size, x_data.shape[1]])
 
             loss_val, _ = sess.run([model.loss, model.train], feed_dict={model.Enc_input: x_data})
@@ -70,7 +72,7 @@ def main(_):
     print("durations : ", trained_song['durations'])
     '''
     # load all midi file
-    all_songs = util.all_song
+    all_songs = util.get_all_song()
 
     songs = all_songs
     print("Load {} Songs...".format(len(songs)))
@@ -83,6 +85,11 @@ def main(_):
         print("pitches : ", song['pitches'])
         print("durations : ", song['durations'])
         print("")
+
+        # 변환이 제대로 되지 않아 아무것도 없는 곡을 지운다.
+        if song['length'] < 10 :
+            util.delete_empty_song(song['name'])
+            continue
 
         songs_len.append(song['length'])
         songs_pitches.append(song['pitches'])
@@ -98,13 +105,19 @@ def main(_):
     num_songs = len(songs)
     num_melody = min(songs_len)
 
+    print("num_song: ", num_songs)
+    print("num_melody: ", num_melody)
+
+    #print("melody max: ", np.array().max())
+    #print("melody min: ", np.array(songs_pitches).min())
+
     # pitch net
-    pitch_net = rnn_AE.LSTMAutoEnc(song_length=num_melody,
-                                   batch_size=num_songs,
+    pitch_net = rnn_AE.LSTMAutoEnc(sequence_length=num_melody,
+                                   batch_size=5,
                                    mode='train')
     # duration net
-    duration_net = rnn_AE.LSTMAutoEnc(song_length=num_melody,
-                                      batch_size=num_songs,
+    duration_net = rnn_AE.LSTMAutoEnc(sequence_length=num_melody,
+                                      batch_size=5,
                                       mode='train')
     # train NN
     if num_songs == 1:

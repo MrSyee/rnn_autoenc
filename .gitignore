@@ -1,8 +1,10 @@
 
-*/__pycache__
+__pycache__
 */graphs
 */save
-./*/midi/generate/*
-./*/midi/export_melody/*
+*/midi/songs/*
+*/midi/generate/*
+*/midi/export_melody/*
 .idea/
 .ipynb_checkpoints/
+midi_download.py

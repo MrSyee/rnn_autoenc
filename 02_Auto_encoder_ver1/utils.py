@@ -1,3 +1,4 @@
+import os
 import numpy as np
 from midi import utils as midiutils
 
@@ -5,17 +6,14 @@ class Util:
     def __init__(self):
         '''
         set index <-> data
-        pitch: C3 ~ C#6 (48 ~ 85)
+        pitch: G2 ~ C#6 (43 ~ 85)
         duration: [4.0, 3.5(..), 3.0, 2.0, 1.75(..), 1.5, 1.0(quarter), 0.75, 0.5, 0.25]
         '''
         # MIDI file path
         self.MIDI_PATH = "./midi/songs/"
         self.FILE_LIST = midiutils.load_filename(self.MIDI_PATH)  # all .mid file list
 
-        # load MIDI file
-        self.all_song = midiutils.load_all_midi(self.FILE_LIST, self.MIDI_PATH)
-
-        self.pitch_sample = list(range(48, 86))
+        self.pitch_sample = list(range(42, 86))
         self.pitch_sample.append(0) # start
         self.pitch_sample.append('Rest')
 
@@ -24,6 +22,12 @@ class Util:
 
     def get_one_song(self, filename):
         return midiutils.load_one_midi(filename, self.MIDI_PATH)
+
+    def get_all_song(self):
+        # load MIDI file
+        midiutils.export_melody()
+        self.all_song = midiutils.load_all_midi(self.FILE_LIST, self.MIDI_PATH)
+        return self.all_song
 
     def idx2char(self, input, mode):
         result = []
@@ -48,11 +52,14 @@ class Util:
         for d in data:
             train_data = np.array([char2idx[i] for i in d])
             x_data.append(train_data[:])
-
         return np.array(x_data)
 
     def song2midi(self, pitches, durations, save_path, filename):
         midiutils.melody2midi(pitches, durations, save_path, filename)
+
+    def delete_empty_song(self, name):
+        os.remove("./midi/export_melody/make_test_{}.mid".format(name))
+        os.rename("./midi/songs/{}.mid".format(name), "./midi/songs/empty_{}.mid".format(name))
 
 if __name__=="__main__":
     util = Util()
