@@ -47,6 +47,12 @@ def test(trained_data, len_data, mode):
         # avarage encoder state output
         dec_in_state = np.mean(enc_out_state, 0).reshape([dec_model.batch_size, dec_model.enc_cell.state_size])
 
+        random_input_flag = 1
+        if random_input_flag == 1:
+            # random vector input in decoder initial state
+            np.random.seed(100)
+            dec_in_state = np.random.randn(1, dec_model.enc_cell.state_size)
+
         prediction = sess.run(dec_model.prediction, feed_dict={dec_model.Dec_state: dec_in_state})
 
         result = util.idx2char(prediction, mode)
@@ -77,7 +83,7 @@ def print_error(result, trained_data, mode):
         print("total error : ", sum(error))
 
 def songs_load():
-    filenames = ['988-v04.mid', '988-v02.mid']
+    filenames = ['988-v07.mid', '988-v08.mid', '988-v12.mid']
     trained_songs = []
     for f in filenames:
         trained_songs.append(util.get_one_song(f))
