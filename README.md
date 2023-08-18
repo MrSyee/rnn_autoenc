@@ -1,5 +1,6 @@
 RNN Auto-Encoder
 ================
+Paper: [Kim, K.H.; Jung, S.H. Automatic Composition using Time Series Embedding of RNN Auto-Encoder. J. Korea Multimed. Soc. 2018, 21, 849–857.](https://koreascience.kr/article/JAKO201829562509737.page)
 
 I study RNN & RNN autoenc and code with tensorflow.  
 I use data which is music melody data from **midi file**.
@@ -7,7 +8,7 @@ I use data which is music melody data from **midi file**.
 ### Contents
 
 1.	basic RNN
-2.	RNN Auto-Encoder(LSTM Auto-Encoder) (reference : https://arxiv.org/abs/1502.04681\)
+2.	RNN Auto-Encoder(LSTM Auto-Encoder) (reference : https://arxiv.org/abs/1502.04681)
 
 ### Description
 
